@@ -10,13 +10,16 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	db2 "github.com/paincake00/inventory-management-service/internal/infrastructure/db"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type App struct {
 	config Config
 	logger *zap.SugaredLogger
 	router *gin.Engine
+	db     *gorm.DB
 }
 
 func NewApp(config Config, logger *zap.SugaredLogger) *App {
@@ -26,6 +29,12 @@ func NewApp(config Config, logger *zap.SugaredLogger) *App {
 	app.logger = logger
 
 	app.router = app.InitRouter()
+
+	db, err := db2.ConnectDB(config.db.address, config.db.maxOpenConn, config.db.maxIdleConn, config.db.maxConnLifetime)
+	if err != nil {
+		app.logger.Fatal(err)
+	}
+	app.db = db
 
 	return app
 }
@@ -77,7 +86,17 @@ func (app *App) Run() error {
 
 	app.logger.Infof("Service is shutting down...")
 
-	// TODO closing gorm
+	// closing db connection
+	sqlDB, err := app.db.DB()
+	if err != nil {
+		app.logger.Errorf("Database connection error: %v", err)
+		return err
+	}
+	err = sqlDB.Close()
+	if err != nil {
+		app.logger.Errorf("Database close error: %v", err)
+		return err
+	}
 
 	return nil
 }
