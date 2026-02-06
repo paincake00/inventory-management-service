@@ -5,7 +5,7 @@ import "time"
 type Purchase struct {
 	ID         uint      `gorm:"primaryKey"`
 	Name       string    `gorm:"type:varchar(255);not null"`
-	Count      int       `gorm:"not null"`
+	Count      float64   `gorm:"not null"`
 	Measure    string    `gorm:"type:varchar(255);not null"`
 	Market     string    `gorm:"type:varchar(255);not null"`
 	Price      float64   `gorm:"not null"`
